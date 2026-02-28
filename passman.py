@@ -155,10 +155,10 @@ def show_password() -> None:
     
     show_access(cursor)
 
-    service = input("| Service: ").strip()
+    service = input("|\n| Service: ").strip()
     email = input("| Email: ").strip()
     show_command = (
-            f"SELECT email, login, password FROM {PASSMAN_TABLE_NAME} "
+            f"SELECT service, email, login, password FROM {PASSMAN_TABLE_NAME} "
             f"WHERE service = ? AND email = ?"
             )
     cursor.execute(show_command, (service, email))
@@ -166,10 +166,12 @@ def show_password() -> None:
     for data in all_data:
         print(
                 f"|{divine_line()[:-1]}\n"
-                f"| Email:\t\t{data[0]}\n"
-                f"| Login:\t\t{data[1]}\n"
-                f"| Password:\t\t{data[2]}"
+                f"| Service:\t\t{data[0]}\n"
+                f"| Email:\t\t{data[1]}\n"
+                f"| Login:\t\t{data[2]}\n"
+                f"| Password:\t\t{data[3]}"
                 )
+    con.close()
     
 
 #######################################

@@ -5,7 +5,10 @@ import os
 import random
 import sys
 import sqlite3
+import shutil
 import textwrap
+from typing import Optional
+import time
 
 HOME_PATH = os.environ.get("HOME")
 CONFIG_PATH = f"{HOME_PATH}/.config"
@@ -33,9 +36,21 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 #######################################
+#           Current Time              #
+#######################################
+def current_time() -> str:
+    ctime = time.strftime("%d-%m-%y %H:%M:%S")
+    return ctime
+
+def divine_line() -> str:
+    len_line = int(shutil.get_terminal_size().columns)
+    line = "-"*len_line
+    return line
+
+#######################################
 #               Database              #
 #######################################
-def create_db() -> str:
+def create_db() -> None:
     if not os.path.exists(CONFIG_PATH):
         os.makedirs(CONFIG_PATH)
     if not os.path.exists(PASSMAN_PATH):
@@ -56,11 +71,12 @@ def create_db() -> str:
             f")"
             )
     con.execute(create_db_command)
+    con.close()
 
 #######################################
 # create pass
 #######################################
-def create_password() -> str:
+def create_password() -> Optional[str]:
     """
     Disclaimer: Генератор использует модуль random,
     по этой причине генератор не является надежным. 
@@ -86,8 +102,7 @@ def create_password() -> str:
             print(create_password.__doc__)
             return password
         else:
-            print(f"{RED}minimal length: {RESET}")
-            create_password()
+            sys.exit(f"{RED}minimal length: {MINIMAL_LEN_PASSWORD}{RESET}")
     
     except ValueError:
         sys.exit(f"{RED}Value Error{RESET}")
@@ -95,6 +110,63 @@ def create_password() -> str:
 #######################################
 # write pass
 #######################################
+def write_password() -> Optional[str]:
+    con = sqlite3.connect(PASSMAN_DB_PATH)
+    cursor = con.cursor()
+
+    service = input("Service: ").strip()
+    email = input("Email: ").strip()
+    login = input("Login: ").strip()
+    password = input("Password: ").strip()
+    write_time = current_time()
+
+    write_command = (
+            f"INSERT INTO {PASSMAN_TABLE_NAME} "
+            f"(service, email, login, password, date_create) "
+            f"VALUES (?, ?, ?, ?, ?)"
+            )
+    cursor.execute(write_command, (service, email, login, password, write_time))
+    con.commit()
+    con.close()
+
+#######################################
+# show pass
+#######################################
+def show_password() -> None:
+    con = sqlite3.connect(PASSMAN_DB_PATH)
+    cursor = con.cursor()
+
+    show_command = (
+            f"SELECT service, email, login FROM {PASSMAN_TABLE_NAME};"
+            )
+    cursor.execute(show_command)
+    access = cursor.fetchall()
+    
+    table = (
+            f"|{divine_line()[:-1]}\n"
+            f"| Service\tEmail\t\t\tLogin\n"
+            f"|{divine_line()[:-1]}\n"
+            )
+    for info in access:
+        table+=f"| {info[0]}\t{info[1]}\t{info[2]}\n"
+    print(table)
+
+    service = input("| Service: ").strip()
+    email = input("| Email: ").strip()
+    show_command = (
+            f"SELECT email, login, password FROM {PASSMAN_TABLE_NAME} "
+            f"WHERE service = ? AND email = ?"
+            )
+    cursor.execute(show_command, (service, email))
+    all_data = cursor.fetchall()
+    for data in all_data:
+        print(
+                f"|{divine_line()[:-1]}\n"
+                f"| Email:\t\t{data[0]}\n"
+                f"| Login:\t\t{data[1]}\n"
+                f"| Password:\t{data[2]}"
+                )
+    
 
 #######################################
 # update pass
@@ -108,9 +180,10 @@ def create_password() -> str:
 def all_actions() -> dict[str, str]:
     actions = {
             "1":"Create password",
-            "2":"Write password",
-            "3":"Update password",
-            "4":"Delete password"
+            "2":"Show password",
+            "3":"Write password",
+            "4":"Update password",
+            "5":"Delete password"
             }
     return actions
 
@@ -133,12 +206,19 @@ def passMan(user_item:str):
         if "create" in user_item:
             password = create_password()
             print(password)
+        
+        elif "show" in user_item:
+            show_password()
+        
         elif "write" in user_item:
-            print(f"{GREEN}Записываем пароль{RESET}")
+            write_password()
+        
         elif "update" in user_item:
             print(f"{YELLOW}Обновляем пароль{RESET}")
+        
         elif "delete" in user_item:
             print(f"{RED}Удаляем пароль{RESET}")
+    
     except KeyboardInterrupt:
         sys.exit(f"{RED}\nExit...{RESET}")
 

@@ -52,3 +52,17 @@ python3 passman.py delete
 | Запись нового пароля | + | Нет коммента |
 | Обновление пароля | - | В стадиии планирования |
 | Удаление пароля | - | В стадии планирования |
+
+## Запуск в контейнере(пример на Podman)
+Сборка образа
+```sh
+podman build -t passman -f Containerfile
+```
+Первый запуск
+```sh
+podman run -it --name passman passman_test:latest
+```
+Последующие запуски контейнера
+```sh
+podman start -ai passman
+```

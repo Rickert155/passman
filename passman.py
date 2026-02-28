@@ -128,28 +128,32 @@ def write_password() -> Optional[str]:
     cursor.execute(write_command, (service, email, login, password, write_time))
     con.commit()
     con.close()
-
 #######################################
 # show pass
 #######################################
-def show_password() -> None:
-    con = sqlite3.connect(PASSMAN_DB_PATH)
-    cursor = con.cursor()
-
+def show_access(cursor) -> None:
+    """Отображение данных service, email, login"""
     show_command = (
             f"SELECT service, email, login FROM {PASSMAN_TABLE_NAME};"
             )
     cursor.execute(show_command)
-    access = cursor.fetchall()
-    
     table = (
             f"|{divine_line()[:-1]}\n"
             f"| Service\tEmail\t\t\tLogin\n"
             f"|{divine_line()[:-1]}\n"
             )
+    access = cursor.fetchall()
+
     for info in access:
         table+=f"| {info[0]}\t{info[1]}\t{info[2]}\n"
-    print(table)
+
+    print(table.strip())
+
+def show_password() -> None:
+    con = sqlite3.connect(PASSMAN_DB_PATH)
+    cursor = con.cursor()
+    
+    show_access(cursor)
 
     service = input("| Service: ").strip()
     email = input("| Email: ").strip()
@@ -164,7 +168,7 @@ def show_password() -> None:
                 f"|{divine_line()[:-1]}\n"
                 f"| Email:\t\t{data[0]}\n"
                 f"| Login:\t\t{data[1]}\n"
-                f"| Password:\t{data[2]}"
+                f"| Password:\t\t{data[2]}"
                 )
     
 

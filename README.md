@@ -31,16 +31,19 @@ python3 passman.py
 ```
 Можно запускать с параметрами
 ```sh
-python3 passman.py create
+python3 passman.py create # генератор пароля
 ```
 ```sh
-python3 passman.py update
+python3 passman.py update # обновление доступов
 ```
 ```sh
-python3 passman.py write 
+python3 passman.py write # запись новых доступов
 ```
 ```sh
-python3 passman.py delete
+python3 passman.py delete # удаление доступов
+```
+```sh
+python3 passman.py dump # сохранение доступов в CSV файл 
 ```
 
 ### Примечание
@@ -52,6 +55,7 @@ python3 passman.py delete
 | Запись нового пароля | + | Нет коммента |
 | Обновление пароля | + | Нет коммента |
 | Удаление пароля | + | Нет коммента |
+| Дамп базы в CSV | + | Нет коммента |
 
 ## Запуск в контейнере(пример на Podman)
 Сборка образа

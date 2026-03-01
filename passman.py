@@ -1,14 +1,15 @@
 """
 CLI Password Manager(PassMan)
 """
+import csv
 import os
 import random
 import sys
 import sqlite3
 import shutil
 import textwrap
-from typing import Optional
 import time
+from typing import Optional
 
 HOME_PATH = os.environ.get("HOME")
 CONFIG_PATH = f"{HOME_PATH}/.config"
@@ -232,13 +233,41 @@ def delete_access():
     show_access(cursor)
     con.close()
 
+#######################################
+# dump base
+#######################################
+def dump_base():
+    """Дамп БД в CSV"""
+    con = sqlite3.connect(PASSMAN_DB_PATH)
+    cursor = con.cursor()
+    cursor.execute(f"SELECT * FROM {PASSMAN_TABLE_NAME}")
+    columns = [description[0] for description in cursor.description ]
+
+    dump_file_name = f"{PASSMAN_TABLE_NAME}.csv"
+    with open(dump_file_name, "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(columns)
+
+    get_all_records = f"SELECT * FROM {PASSMAN_TABLE_NAME}"
+    cursor.execute(get_all_records)
+    
+    all_data = cursor.fetchall()
+    con.close()
+    
+    with open(dump_file_name, "a") as file:
+        writer = csv.writer(file)
+        for data in all_data:
+            writer.writerow(list(data))
+    print(f"{GREEN}DUMP: {dump_file_name}{RESET}")
+
 def all_actions() -> dict[str, str]:
     actions = {
             "1":"Create password",
             "2":"Show password",
             "3":"Write password",
             "4":"Update password",
-            "5":"Delete password"
+            "5":"Delete password",
+            "6":"Dump (SQLite3 -> CSV)"
             }
     return actions
 
@@ -273,6 +302,9 @@ def passMan(user_item:str):
         
         elif "delete" in user_item:
             delete_access()
+
+        elif "dump" in user_item:
+            dump_base()
     
     except KeyboardInterrupt:
         sys.exit(f"{RED}\nExit...{RESET}")
@@ -290,7 +322,6 @@ def main():
         passMan(user_item=user_item)
     else:
         try:
-            # Получаем текст меню
             menu = get_menu()
             user_item = input(f"{menu}>>> ").strip()
         

@@ -60,7 +60,7 @@ podman build -t passman -f Containerfile
 ```
 Первый запуск
 ```sh
-podman run -it --name passman passman_test:latest
+podman run -it --name passman passman:latest
 ```
 Последующие запуски контейнера
 ```sh

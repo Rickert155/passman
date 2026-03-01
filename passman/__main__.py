@@ -333,6 +333,8 @@ def main():
         
         except KeyboardInterrupt:
             sys.exit(f"{RED}\nExit...{RESET}")
+        except EOFError:
+            sys.exit(f"{RED}\nExit...{RESET}")
 
 if __name__ == "__main__":
     main()

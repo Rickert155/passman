@@ -205,15 +205,32 @@ def update_access():
         old_email
         ))
     
-    show_access(cursor)
 
     con.commit()
+    show_access(cursor)
     con.close()
 
 #######################################
 # delete pass
 #######################################
+def delete_access():
+    """Удаление доступов"""
+    con = sqlite3.connect(PASSMAN_DB_PATH)
+    cursor = con.cursor()
+    
+    show_access(cursor)
 
+    service = input("| Service: ")
+    email = input("| Email: ")
+
+    delete_command = (
+            f"DELETE FROM {PASSMAN_TABLE_NAME} WHERE service = ? AND email = ?"
+            )
+    cursor.execute(delete_command, (service, email))
+    
+    con.commit()
+    show_access(cursor)
+    con.close()
 
 def all_actions() -> dict[str, str]:
     actions = {
@@ -255,7 +272,7 @@ def passMan(user_item:str):
             update_access()
         
         elif "delete" in user_item:
-            print(f"{RED}Удаляем пароль{RESET}")
+            delete_access()
     
     except KeyboardInterrupt:
         sys.exit(f"{RED}\nExit...{RESET}")

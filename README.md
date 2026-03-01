@@ -27,23 +27,23 @@ git clone https://github.com/Rickert155/passman
 ## Запуск парольного менеджера
 Можно запустить без аргументов командной строки
 ```sh
-python3 passman.py
+python3 -m passman
 ```
 Можно запускать с параметрами
 ```sh
-python3 passman.py create # генератор пароля
+python3 -m passman create # генератор пароля
 ```
 ```sh
-python3 passman.py update # обновление доступов
+python3 -m passman.py update # обновление доступов
 ```
 ```sh
-python3 passman.py write # запись новых доступов
+python3 -m passman.py write # запись новых доступов
 ```
 ```sh
-python3 passman.py delete # удаление доступов
+python3 -m passman.py delete # удаление доступов
 ```
 ```sh
-python3 passman.py dump # сохранение доступов в CSV файл 
+python3 -m passman.py dump # сохранение доступов в CSV файл 
 ```
 
 ### Примечание

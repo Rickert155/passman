@@ -177,6 +177,38 @@ def show_password() -> None:
 #######################################
 # update pass
 #######################################
+def update_access():
+    """Обновление записей"""
+    con = sqlite3.connect(PASSMAN_DB_PATH)
+    cursor = con.cursor()
+    
+    show_access(cursor)
+    
+    service = input("| Service: ").strip()
+    old_email = input("| Old Email: ").strip()
+    new_email = input("| Update Email: ").strip()
+    new_login = input("| Update Login: ").strip()
+    new_password = input("| Update Password: ").strip()
+
+    update_command = (
+            f"UPDATE {PASSMAN_TABLE_NAME} "
+            f"SET email = ?, login = ?, password = ?, date_update = ? "
+            f"WHERE service = ? AND email = ?;"
+            )
+    date_update = current_time()
+    cursor.execute(update_command, (
+        new_email,
+        new_login,
+        new_password,
+        date_update,
+        service,
+        old_email
+        ))
+    
+    show_access(cursor)
+
+    con.commit()
+    con.close()
 
 #######################################
 # delete pass
@@ -220,7 +252,7 @@ def passMan(user_item:str):
             write_password()
         
         elif "update" in user_item:
-            print(f"{YELLOW}Обновляем пароль{RESET}")
+            update_access()
         
         elif "delete" in user_item:
             print(f"{RED}Удаляем пароль{RESET}")

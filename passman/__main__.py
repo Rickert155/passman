@@ -21,6 +21,7 @@ PASSMAN_TABLE_NAME = "passman"
 MINIMAL_LEN_PASSWORD = 14
 
 DEFAULT_CSV_BASE_ACCESS = "access.csv"
+required_fields = ["service", "email", "login", "password"]
 
 #######################################
 #           Metadata                  #  
@@ -265,28 +266,29 @@ def dump_base():
 #######################################
 # import csv -> sql
 #######################################
-def import_csv_base(access_path:str):
-    required_fields = ["service", "email", "login", "password"]
-    with open(access_path, "r") as file:
+def create_access_base_csv():
+    with open(DEFAULT_CSV_BASE_ACCESS, "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(required_fields)
+        sys.exit(
+            f"{RED}В таблице отсутствуют обязательные поля!\n"
+            f"Создан документ {DEFAULT_CSV_BASE_ACCESS},"
+            f" {BOLD}можете его наполнить{RESET}"
+            )
+
+def import_csv_base():
+    with open(DEFAULT_CSV_BASE_ACCESS, "r") as file:
         reader = csv.DictReader(file)
         field_names = reader.fieldnames
         none_list = [field for field in required_fields if field not in field_names]
 
         if len(none_list) > 0:
-            with open(DEFAULT_CSV_BASE_ACCESS, "w") as file:
-                writer = csv.writer(file)
-                writer.writerow(required_fields)
-            sys.exit(
-                    f"{RED}В таблице отсутствуют обязательные поля: "
-                    f"{BOLD}{none_list}{RESET}\n"
-                    f"Создан документ {DEFAULT_CSV_BASE_ACCESS},"
-                    f" {BOLD}можете его наполнить{RESET}"
-                    )
+            create_access_base_csv()
         else:
             con = sqlite3.connect(PASSMAN_DB_PATH)
             cursor = con.cursor()
             
-            with open(access_path, "r") as file:
+            with open(DEFAULT_CSV_BASE_ACCESS, "r") as file:
                 number_access = 0
                 for row in csv.DictReader(file):
                     number_access+=1
@@ -309,23 +311,18 @@ def import_csv_base(access_path:str):
                                 current_time()
                                 )
                             )
-                show_access(cursor)
                 if number_access == 0:
-                    sys.exit(f"{RED}Таблица {access_path} пустая!{RESET}")
+                    sys.exit(f"{RED}Таблица {DEFAULT_CSV_BASE_ACCESS} пустая!{RESET}")
+                show_access(cursor)
 
     con.commit()
     con.close()
 
 def import_base():
-    access_path = DEFAULT_CSV_BASE_ACCESS 
-    if not os.path.exists(access_path):
-        access_path = input("PATH: ").strip()
-        if os.path.exists(access_path):
-            import_csv_base(access_path=access_path)
-        else:
-            sys.exit(f"{RED}\"{access_path}\" not defined!{RESET}")
+    if os.path.exists(DEFAULT_CSV_BASE_ACCESS):
+        import_csv_base()
     else:
-        import_csv_base(access_path=access_path)
+        create_access_base_csv()
 
 
 def all_actions() -> dict[str, str]:

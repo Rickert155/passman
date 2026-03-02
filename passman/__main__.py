@@ -20,11 +20,13 @@ PASSMAN_TABLE_NAME = "passman"
 
 MINIMAL_LEN_PASSWORD = 14
 
+DEFAULT_CSV_BASE_ACCESS = "access.csv"
+
 #######################################
 #           Metadata                  #  
 #######################################
 __author__ = "CyberWarn"
-__version__ = "0.1"
+__version__ = "0.2"
 
 #######################################
 #               Colors                #
@@ -234,7 +236,7 @@ def delete_access():
     con.close()
 
 #######################################
-# dump base
+# dump base -> csv
 #######################################
 def dump_base():
     """Дамп БД в CSV"""
@@ -260,6 +262,72 @@ def dump_base():
             writer.writerow(list(data))
     print(f"{GREEN}DUMP: {dump_file_name}{RESET}")
 
+#######################################
+# import csv -> sql
+#######################################
+def import_csv_base(access_path:str):
+    required_fields = ["service", "email", "login", "password"]
+    with open(access_path, "r") as file:
+        reader = csv.DictReader(file)
+        field_names = reader.fieldnames
+        none_list = [field for field in required_fields if field not in field_names]
+
+        if len(none_list) > 0:
+            with open(DEFAULT_CSV_BASE_ACCESS, "w") as file:
+                writer = csv.writer(file)
+                writer.writerow(required_fields)
+            sys.exit(
+                    f"{RED}В таблице отсутствуют обязательные поля: "
+                    f"{BOLD}{none_list}{RESET}\n"
+                    f"Создан документ {DEFAULT_CSV_BASE_ACCESS},"
+                    f" {BOLD}можете его наполнить{RESET}"
+                    )
+        else:
+            con = sqlite3.connect(PASSMAN_DB_PATH)
+            cursor = con.cursor()
+            
+            with open(access_path, "r") as file:
+                number_access = 0
+                for row in csv.DictReader(file):
+                    number_access+=1
+                    service = row["service"]
+                    email = row["email"]
+                    login = row["login"]
+                    password = row["password"]
+
+                    insert_request = (
+                            f"INSERT INTO {PASSMAN_TABLE_NAME} "
+                            f"(service, email, login, password, date_create) "
+                            f"VALUES (?, ?, ?, ?, ?)"
+                            )
+                    cursor.execute(
+                            insert_request, (
+                                service, 
+                                email, 
+                                login, 
+                                password,
+                                current_time()
+                                )
+                            )
+                show_access(cursor)
+                if number_access == 0:
+                    sys.exit(f"{RED}Таблица {access_path} пустая!{RESET}")
+
+    con.commit()
+    con.close()
+
+def import_base():
+    access_path = DEFAULT_CSV_BASE_ACCESS 
+    if not os.path.exists(access_path):
+        access_path = input("PATH: ").strip()
+        if os.path.exists(access_path):
+            import_csv_base(access_path=access_path)
+        else:
+            sys.exit(f"{RED}\"{access_path}\" not defined!{RESET}")
+    else:
+        import_csv_base(access_path=access_path)
+
+
 def all_actions() -> dict[str, str]:
     actions = {
             "1":"Create password",
@@ -267,7 +335,8 @@ def all_actions() -> dict[str, str]:
             "3":"Write password",
             "4":"Update password",
             "5":"Delete password",
-            "6":"Dump (SQLite3 -> CSV)"
+            "6":"Dump (SQLite3 -> CSV)",
+            "7":"Import (CSV -> SQLite3)"
             }
     return actions
 
@@ -305,6 +374,9 @@ def passMan(user_item:str):
 
         elif "dump" in user_item:
             dump_base()
+        
+        elif "import" in user_item:
+            import_base()
     
     except KeyboardInterrupt:
         sys.exit(f"{RED}\nExit...{RESET}")

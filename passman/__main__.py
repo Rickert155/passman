@@ -27,7 +27,7 @@ required_fields = ["service", "email", "login", "password"]
 #           Metadata                  #  
 #######################################
 __author__ = "CyberWarn"
-__version__ = "0.3"
+__version__ = "0.3.1"
 
 #######################################
 #               Colors                #
@@ -189,9 +189,10 @@ def show_password() -> None:
 
     cursor.execute(show_command, values)
     all_data = cursor.fetchall()
-    for data in all_data:
+    for count, data in enumerate(all_data, start=1):
         print(
                 f"|{divine_line()[:-1]}\n"
+                f"| {RED}[x] {count} [O]{RESET}\n"
                 f"| {GREEN}Service:{RESET}\t\t{data[0]}\n"
                 f"| {GREEN}Email:{RESET}\t\t{data[1]}\n"
                 f"| {GREEN}Login:{RESET}\t\t{data[2]}\n"
@@ -290,7 +291,7 @@ def dump_base():
 # import csv -> sql
 #######################################
 def create_access_base_csv():
-    with open(DEFAULT_CSV_BASE_ACCESS, "w") as file:
+    with open(DEFAULT_CSV_BASE_ACCESS, "w", encode="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(required_fields)
         sys.exit(

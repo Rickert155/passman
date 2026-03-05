@@ -27,7 +27,7 @@ required_fields = ["service", "email", "login", "password"]
 #           Metadata                  #  
 #######################################
 __author__ = "CyberWarn"
-__version__ = "0.2"
+__version__ = "0.3"
 
 #######################################
 #               Colors                #
@@ -70,6 +70,7 @@ def create_db() -> None:
             f"email TEXT DEFAULT NULL, "
             f"login TEXT DEFAULT NULL, "
             f"password TEXT NOT NULL, "
+            f"comment TEXT, "
             f"date_create TEXT, "
             f"date_update TEXT"
             f")"
@@ -122,14 +123,24 @@ def write_password() -> Optional[str]:
     email = input("Email: ").strip()
     login = input("Login: ").strip()
     password = input("Password: ").strip()
+    comment = input("Comment: ").strip()
     write_time = current_time()
 
     write_command = (
             f"INSERT INTO {PASSMAN_TABLE_NAME} "
-            f"(service, email, login, password, date_create) "
-            f"VALUES (?, ?, ?, ?, ?)"
+            f"(service, email, login, password, comment, date_create) "
+            f"VALUES (?, ?, ?, ?, ?, ?)"
             )
-    cursor.execute(write_command, (service, email, login, password, write_time))
+    cursor.execute(
+            write_command, (
+                service, 
+                email, 
+                login, 
+                password, 
+                comment, 
+                write_time
+                )
+            )
     con.commit()
     con.close()
 #######################################
@@ -160,20 +171,32 @@ def show_password() -> None:
     show_access(cursor)
 
     service = input("|\n| Service: ").strip()
-    email = input("| Email: ").strip()
-    show_command = (
-            f"SELECT service, email, login, password FROM {PASSMAN_TABLE_NAME} "
-            f"WHERE service = ? AND email = ?"
-            )
-    cursor.execute(show_command, (service, email))
+    if service != "*":
+        email = input("| Email: ").strip()
+    if service == "*":
+        show_command = (
+                f"SELECT service, email, login, password, "
+                f"comment FROM {PASSMAN_TABLE_NAME}"
+                )
+        values = ()
+    else:
+        show_command = (
+                f"SELECT service, email, login, password, "
+                f"comment FROM {PASSMAN_TABLE_NAME} "
+                f"WHERE service = ? AND email = ?"
+                )
+        values = (service, email)
+
+    cursor.execute(show_command, values)
     all_data = cursor.fetchall()
     for data in all_data:
         print(
                 f"|{divine_line()[:-1]}\n"
-                f"| Service:\t\t{data[0]}\n"
-                f"| Email:\t\t{data[1]}\n"
-                f"| Login:\t\t{data[2]}\n"
-                f"| Password:\t\t{data[3]}"
+                f"| {GREEN}Service:{RESET}\t\t{data[0]}\n"
+                f"| {GREEN}Email:{RESET}\t\t{data[1]}\n"
+                f"| {GREEN}Login:{RESET}\t\t{data[2]}\n"
+                f"| {GREEN}Password:{RESET}\t\t{data[3]}\n"
+                f"| {GREEN}Comment:{RESET}\t\t{data[4]}"
                 )
     con.close()
     
@@ -296,21 +319,23 @@ def import_csv_base():
                     email = row["email"]
                     login = row["login"]
                     password = row["password"]
+                    comment = row.get("comment")
 
                     if "://" in service:service = service.split("://")[1]
                     if service[-1] == "/":service = service[:-1]
 
                     insert_request = (
                             f"INSERT INTO {PASSMAN_TABLE_NAME} "
-                            f"(service, email, login, password, date_create) "
-                            f"VALUES (?, ?, ?, ?, ?)"
+                            f"(service, email, login, password, "
+                            f"comment, date_create) "
+                            f"VALUES (?, ?, ?, ?, ?, ?)"
                             )
-                    cursor.execute(
-                            insert_request, (
+                    cursor.execute(insert_request, (
                                 service, 
                                 email, 
                                 login, 
                                 password,
+                                comment,
                                 current_time()
                                 )
                             )

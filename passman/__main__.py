@@ -143,13 +143,13 @@ def show_access(cursor) -> None:
     cursor.execute(show_command)
     table = (
             f"|{divine_line()[:-1]}\n"
-            f"| Service\tEmail\t\t\tLogin\n"
+            f"| [#] Service\t\tEmail\t\t\tLogin\n"
             f"|{divine_line()[:-1]}\n"
             )
     access = cursor.fetchall()
 
-    for info in access:
-        table+=f"| {info[0]}\t{info[1]}\t{info[2]}\n"
+    for index, info in enumerate(access, start=1):
+        table+=f"| [{index}] {info[0]}\t\t{info[1]}\t{info[2]}\n"
 
     print(table.strip())
 
@@ -296,6 +296,9 @@ def import_csv_base():
                     email = row["email"]
                     login = row["login"]
                     password = row["password"]
+
+                    if "://" in service:service = service.split("://")[1]
+                    if service[-1] == "/":service = service[:-1]
 
                     insert_request = (
                             f"INSERT INTO {PASSMAN_TABLE_NAME} "

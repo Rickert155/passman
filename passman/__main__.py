@@ -3,7 +3,7 @@ CLI Password Manager(PassMan)
 """
 import csv
 import os
-import random
+import secrets
 import sys
 import sqlite3
 import shutil
@@ -27,7 +27,7 @@ required_fields = ["service", "email", "login", "password"]
 #           Metadata                  #  
 #######################################
 __author__ = "CyberWarn"
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 #######################################
 #               Colors                #
@@ -82,12 +82,6 @@ def create_db() -> None:
 # create pass
 #######################################
 def create_password() -> Optional[str]:
-    """
-    Disclaimer: Генератор использует модуль random,
-    по этой причине генератор не является надежным. 
-    В рамках прототипа будет использоваться random, в дельнейшем 
-    будет переход на более серьезную систему
-    """
     all_symbols = (
             "abcdefghijklmnopqrstuvwxyz"
             "1234567890"
@@ -100,11 +94,10 @@ def create_password() -> Optional[str]:
             ).strip())
         if len_pass >= MINIMAL_LEN_PASSWORD:
             for _ in range(len_pass):
-                symbol = random.choice(all_symbols)
-                if random.choice([True, False]):
+                symbol = secrets.choice(all_symbols)
+                if secrets.choice([True, False]):
                     symbol = symbol.upper()
                 password+=symbol
-            print(create_password.__doc__)
             return password
         else:
             sys.exit(f"{RED}minimal length: {MINIMAL_LEN_PASSWORD}{RESET}")
@@ -291,7 +284,7 @@ def dump_base():
 # import csv -> sql
 #######################################
 def create_access_base_csv():
-    with open(DEFAULT_CSV_BASE_ACCESS, "w", encode="utf-8") as file:
+    with open(DEFAULT_CSV_BASE_ACCESS, "w") as file:
         writer = csv.writer(file)
         writer.writerow(required_fields)
         sys.exit(
